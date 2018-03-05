@@ -3,9 +3,10 @@ use std::collections::HashSet;
 use std::io::{self, BufRead};
 use std::io::prelude::*;
 
+pub const CORPUS : &'static str = "./dictionaries_out/corpus.txt";
+
 const DICT_IN : &'static str = "./dictionaries";
 const DICT_OUT : &'static str = "./dictionaries_out";
-const CORPUS : &'static str = "./dictionaries_out/corpus.txt";
 
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
 /// then creates a single merged dictionary called "corpus.txt" in the current folder.
