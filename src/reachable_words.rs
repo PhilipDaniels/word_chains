@@ -1,23 +1,21 @@
 use std::fs;
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::io::{self, BufRead};
-use std::io::prelude::*;
+//use std::io::prelude::*;
 
 use ::dictionary;
-
-type WordBase = HashMap<usize, Vec<String>>;
+use ::word_base::WordBase;
+//use ::word_table::WordTable;
 
 pub fn calculate_reachable_words() {
     let wordbase = get_words_by_length();
 
-    let keys = sorted_keys(&wordbase);
+    let keys = wordbase.sorted_keys();
     for key in keys {
-        let words = &wordbase[&key];
-        let word_length = words.len();
-        if words.len() <= 2 { continue };
-
-        let rw_filename = format!("{}/reachable_words_{:2}.txt", dictionary::DICT_OUT, words.len());
-
+        let word_table = &wordbase[key];
+        if word_table.words.len() <= 2 { continue };
+        let rw_filename = format!("{}/reachable_words_{:02}.txt", dictionary::DICT_OUT, word_table.word_length());
+        println!("Writing {}", rw_filename);
     }
 }
 
@@ -32,25 +30,19 @@ fn get_words_by_length() -> WordBase {
 
         for word in rdr.lines() {
             let word = word.unwrap();
-            let len = word.len();
-            let v = wordbase.entry(len).or_insert(Vec::new());
-            v.push(word);
+            wordbase.add_word(word);
         }
 
         println!("Finished reading {}", dictionary::CORPUS);
 
-        let keys = sorted_keys(&wordbase);
+        let keys = wordbase.sorted_keys();
 
         for key in keys {
-            println!("Number of words of length {:2} = {}", key, &wordbase[&key].len());
+            println!("Number of words of length {:2} = {}", key, wordbase[key].words.len());
         }
     }
 
     wordbase
 }
 
-fn sorted_keys(wordbase: &WordBase) -> Vec<usize> {
-    let mut keys : Vec<usize> = wordbase.keys().map(|&k| k).collect();
-    keys.sort();
-    keys
-}
+
