@@ -9,6 +9,16 @@ type WordBase = HashMap<usize, Vec<String>>;
 
 pub fn calculate_reachable_words() {
     let wordbase = get_words_by_length();
+
+    let keys = sorted_keys(&wordbase);
+    for key in keys {
+        let words = &wordbase[&key];
+        let word_length = words.len();
+        if words.len() <= 2 { continue };
+
+        let rw_filename = format!("{}/reachable_words_{:2}.txt", dictionary::DICT_OUT, words.len());
+
+    }
 }
 
 fn get_words_by_length() -> WordBase {
@@ -32,7 +42,7 @@ fn get_words_by_length() -> WordBase {
         let keys = sorted_keys(&wordbase);
 
         for key in keys {
-            println!("Number of words of length {:2} = {}", key, wordbase[&key].len());
+            println!("Number of words of length {:2} = {}", key, &wordbase[&key].len());
         }
     }
 
