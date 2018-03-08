@@ -1,5 +1,4 @@
 use std::fs;
-//use std::collections::HashMap;
 use std::io::{self, BufRead, BufWriter};
 use std::io::prelude::*;
 
@@ -7,7 +6,7 @@ use ::dictionary;
 use ::word_base::WordBase;
 use ::word_table::WordTable;
 
-pub fn calculate_reachable_words() {
+pub fn calculate_words_one_letter_different() {
     let wordbase = get_words_by_length();
 
     let keys = wordbase.sorted_keys();
@@ -46,8 +45,10 @@ fn calc_reachable_words_for_table(wt: &WordTable) {
     let mut all_rwords = Vec::new();
     for w1 in &wt.words {
         let mut rwords = Vec::new();
+        // The first word on a line is the anchor word.
         rwords.push(w1);
 
+        // Followed by all the words that are one letter different.
         for w2 in &wt.words {
             if one_letter_different(w1, w2) {
                 rwords.push(w2);
@@ -57,7 +58,7 @@ fn calc_reachable_words_for_table(wt: &WordTable) {
         all_rwords.push(rwords);
     }
 
-    let rw_filename = format!("{}/reachable_words_{:02}.txt", dictionary::DICT_OUT, wt.word_length());
+    let rw_filename = format!("{}/one_letter_different_{:02}.txt", dictionary::DICT_OUT, wt.word_length());
     println!("Writing {}", rw_filename);
     let rw_file = fs::File::create(rw_filename).unwrap();
     let mut writer = io::BufWriter::new(rw_file);

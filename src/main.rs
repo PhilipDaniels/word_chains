@@ -5,5 +5,5 @@ mod word_table;
 
 fn main() {
     //dictionary::create_merged_dictionary();
-    reachable_words::calculate_reachable_words();
+    reachable_words::calculate_words_one_letter_different();
 }
