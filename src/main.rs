@@ -4,6 +4,7 @@ mod dictionary;
 mod letter_differences;
 mod word_base;
 mod word_table;
+mod graph;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
