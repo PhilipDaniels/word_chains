@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{self, BufRead, BufWriter};
+use std::io::{self, BufRead};
 use std::io::prelude::*;
 
 use ::dictionary;
@@ -67,9 +67,9 @@ fn calc_reachable_words_for_table(wt: &WordTable) {
         if v.len() < 2 { continue };
 
         for w in v.iter() {
-            write!(writer, "{} ", w);
+            write!(writer, "{} ", w).unwrap();
         }
-        write!(writer, "\n");
+        write!(writer, "\n").unwrap();
     }
 }
 
