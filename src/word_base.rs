@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, AddAssign};
 use ::word_table::WordTable;
 
 pub struct WordBase {
@@ -16,12 +16,6 @@ impl WordBase {
         keys.sort();
         keys
     }
-
-    pub fn add_word(&mut self, word: String) {
-        let len = word.len();
-        let wt = self.words.entry(len).or_insert(WordTable::new(len));
-        wt.words.push(word);
-    }
 }
 
 impl Index<usize> for WordBase {
@@ -35,5 +29,13 @@ impl Index<usize> for WordBase {
 impl IndexMut<usize> for WordBase {
     fn index_mut(&mut self, word_length: usize) -> &mut WordTable {
         self.words.get_mut(&word_length).unwrap()
+    }
+}
+
+impl AddAssign<String> for WordBase {
+    fn add_assign(&mut self, word: String) {
+        let len = word.len();
+        let wt = self.words.entry(len).or_insert(WordTable::new(len));
+        wt.words.push(word);
     }
 }

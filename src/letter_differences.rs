@@ -27,7 +27,7 @@ fn get_words_by_length() -> WordBase {
 
     for word in rdr.lines() {
         let word = word.unwrap();
-        wordbase.add_word(word);
+        wordbase += word;
     }
 
     println!("Finished reading {}", dictionary::CORPUS);
