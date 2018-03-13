@@ -13,7 +13,7 @@ pub fn calculate_words_one_letter_different() {
     for key in keys {
         let word_table = &wordbase[key];
         if word_table.words.len() <= 2 { continue };
-        calc_reachable_words_for_table(&word_table);
+        let rwords_for_table = calc_reachable_words_for_table(&word_table);
     }
 }
 
@@ -41,7 +41,7 @@ fn get_words_by_length() -> WordBase {
     wordbase
 }
 
-fn calc_reachable_words_for_table(wt: &WordTable) {
+fn calc_reachable_words_for_table(wt: &WordTable) -> Vec<Vec<&String>> {
     let mut all_rwords = Vec::new();
     for w1 in &wt.words {
         let mut rwords = Vec::new();
@@ -58,19 +58,21 @@ fn calc_reachable_words_for_table(wt: &WordTable) {
         all_rwords.push(rwords);
     }
 
-    let rw_filename = format!("{}/one_letter_different_{:02}.txt", dictionary::DICT_OUT, wt.word_length());
-    println!("Writing {}", rw_filename);
-    let rw_file = fs::File::create(rw_filename).unwrap();
-    let mut writer = io::BufWriter::new(rw_file);
-    for v in &all_rwords {
-        // Words which have no other reachable words are not interesting.
-        if v.len() < 2 { continue };
+//    let rw_filename = format!("{}/one_letter_different_{:02}.txt", dictionary::DICT_OUT, wt.word_length());
+//    println!("Writing {}", rw_filename);
+//    let rw_file = fs::File::create(rw_filename).unwrap();
+//    let mut writer = io::BufWriter::new(rw_file);
+//    for v in &all_rwords {
+//        // Words which have no other reachable words are not interesting.
+//        if v.len() < 2 { continue };
+//
+//        for w in v.iter() {
+//            write!(writer, "{} ", w).unwrap();
+//        }
+//        write!(writer, "\n").unwrap();
+//    }
 
-        for w in v.iter() {
-            write!(writer, "{} ", w).unwrap();
-        }
-        write!(writer, "\n").unwrap();
-    }
+    all_rwords
 }
 
 fn one_letter_different(w1: &str, w2: &str) -> bool {
