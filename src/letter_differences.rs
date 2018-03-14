@@ -5,6 +5,7 @@ use std::io::prelude::*;
 use ::dictionary;
 use ::word_base::WordBase;
 use ::word_table::WordTable;
+use ::graph::Graph;
 
 struct AnchoredWords {
     anchor: String,
@@ -31,7 +32,29 @@ pub fn calculate_words_one_letter_different() {
         let rwords_for_table = calc_reachable_words_for_table(&word_table);
         // This is the initial difference file, includes 2-islands.
         write_difference_file(word_table.word_length(), &rwords_for_table);
+        println!("Calculating graph");
+        let g = make_graph(&rwords_for_table);
+        println!("Calculating graph finished");
     }
+}
+
+fn make_graph(anchored_words: &Vec<AnchoredWords>) -> Graph {
+    let mut g = Graph::new();
+
+    // First load all the anchor words so the graph can calculate their indexes.
+    for aw in anchored_words {
+        g.add_anchor_word(&aw.anchor);
+    }
+
+    // Then we can add all the reachable words.
+    for aw in anchored_words {
+        for rw in &aw.reachable_words {
+            g.add_reachable_word(&aw.anchor, rw);
+        }
+    }
+
+    g.calculate_components();
+    g
 }
 
 fn get_words_by_length() -> WordBase {
@@ -107,3 +130,72 @@ fn one_letter_different(w1: &str, w2: &str) -> bool {
 
     return num_diffs == 1
 }
+
+/*
+void CalculateReachableWordsUsingPrefix()
+{
+    // First calculate all the prefixes. This is a mapping of the
+    // form 'pre -> Prefix("pre")'. As we process each word we add
+    // it to the reachable words collection of the relevant prefix.
+    Prefix[string] prefixes;
+    foreach (word; _words)
+    {
+        auto prefix = word.GetPrefix();
+        auto p = prefix in prefixes;
+        if (p)
+        {
+            (*p).AddReachableWord(word);
+        }
+        else
+        {
+            auto p2 = new Prefix(prefix);
+            p2.AddReachableWord(word);
+            prefixes[prefix] = p2;
+        }
+    }
+    writef("Word Len = %s, %s prefixes calculated, ",
+           _word_length, prefixes.length);
+    fflush(std.c.stdio.stdout);
+
+    // Determine which prefixes can reach other prefixes.
+    foreach (p1; prefixes)
+    {
+        foreach (p2; prefixes)
+        {
+            if (OneLetterDifferent(p1.GetPrefix(), p2.GetPrefix()))
+                p1.AddReachablePrefix(p2);
+        }
+    }
+    write("cross linked, ");
+    fflush(std.c.stdio.stdout);
+
+    // Now calculate the reachable words.
+    foreach (anchor_word; _words)
+    {
+        auto prefix = prefixes[anchor_word.GetPrefix()];
+        AddWordsFromPrefix(anchor_word, prefix);
+    }
+    writeln("and reachable words found.");
+}
+
+void AddWordsFromPrefix(Word anchor, Prefix prefix)
+{
+    // Add all the words directly reachable from this prefix.
+    foreach (rword, dummy; prefix.ReachableWords())
+    {
+        if (OneLetterDifferent(anchor.GetWord(), rword.GetWord()))
+            anchor.AddReachableWord(rword);
+    }
+
+    // Add all the words directly reachable from the prefixes
+    // we are iterating over.
+    foreach (rp, dummy; prefix.ReachablePrefixes())
+    {
+        foreach (rword, dummy2; rp.ReachableWords())
+        {
+            if (OneLetterDifferent(anchor.GetWord(), rword.GetWord()))
+                anchor.AddReachableWord(rword);
+        }
+    }
+}
+*/
