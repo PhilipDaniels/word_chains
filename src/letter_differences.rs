@@ -42,12 +42,15 @@ fn make_graph(anchored_words: &Vec<AnchoredWords>) -> Graph {
     let mut g = Graph::new();
 
     // First load all the anchor words so the graph can calculate their indexes.
-    for aw in anchored_words {
+    // Ignore anchor words with no reachable words, they are not interesting.
+    let interesting_words : Vec<&AnchoredWords> = anchored_words.iter().filter(|aw| aw.reachable_words.len() > 0).collect();
+
+    for aw in &interesting_words {
         g.add_anchor_word(&aw.anchor);
     }
 
     // Then we can add all the reachable words.
-    for aw in anchored_words {
+    for aw in &interesting_words {
         for rw in &aw.reachable_words {
             g.add_reachable_word(&aw.anchor, rw);
         }

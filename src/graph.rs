@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::cell::{RefCell, RefMut};
 
 pub struct Vertex<'word> {
     word: &'word String,
@@ -51,49 +52,40 @@ impl<'word> Graph<'word> {
     pub fn calculate_components(&mut self) {
         let mut next_component_number = 0;
 
-        // New approach. Find first, then mutate.
-        // Get a list of all the indexes reachable from a starting index.
-        // Then return, and set them all to the same component.
-
         while let Some(idx) = self.vertices.iter().position(|v| v.component.is_none()) {
-            self.depth_first_search(idx, next_component_number);
+            // First find all the vertices in this component and record their indexes in `seen`.
+            // This is a read-only operation.
+            let mut seen = HashSet::new();
+            self.dfs(&mut seen, idx);
+
+            // Then set the component on all those nodes.
+            for i in 0..self.vertices.len() {
+                if seen.contains(&i) {
+                    self.vertices[i].component = Some(next_component_number);
+                }
+            }
+
+            if seen.len() > 2 {
+                println!("Set component number of {} on {} vertices", next_component_number, seen.len());
+            }
+
             next_component_number += 1;
         }
-
-//        for i in 0..self.vertices.len() {
-//            let mut v = &self.vertices[i];
-//            if v.component.is_some() {
-//                continue;
-//            }
-//            v.component = Some(next_component_number);
-//            self.depth_first_search(&mut v);
-//            next_component_number += 1;
-//        }
     }
 
-    fn depth_first_search(&mut self, idx: usize, component_number: usize) {
-        {
-            let v = &mut self.vertices[idx];
-            v.component = Some(component_number);
-        }
-
+    fn dfs(&self, seen: &mut HashSet::<usize>, idx: usize) {
+        seen.insert(idx);
         let v = &self.vertices[idx];
-        for &i in &v.adjacency_list {
-            if self.vertices[i].component.is_none() {
-                self.depth_first_search(i, component_number);
+
+        for i2 in &v.adjacency_list {
+            if seen.contains(&i2) {
+                continue;
+            }
+
+            let v2 = &self.vertices[idx];
+            if v2.component.is_none() {
+                self.dfs(seen, *i2);
             }
         }
-
-        /*
-            v.SetComponent(c);
-            c.vertex_count++;
-
-            foreach (idx; v.AdjList())
-            {
-                auto v2 = _vertices[idx];
-                if (!v2.GetComponent())
-                    DFS(v2, c);
-            }
-        */
     }
 }
