@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::cell::{RefCell, RefMut};
 
 pub struct Vertex<'word> {
     word: &'word String,
@@ -24,15 +23,13 @@ impl<'word> Vertex<'word> {
 pub struct Graph<'word> {
     vertices: Vec<Vertex<'word>>,
     word_to_index: HashMap<&'word String, usize>,
-    components: Vec<usize>
 }
 
 impl<'word> Graph<'word> {
     pub fn new() -> Self {
         Graph {
             vertices: Vec::new(),
-            word_to_index : HashMap::new(),
-            components: Vec::new ()
+            word_to_index : HashMap::new()
         }
     }
 
@@ -73,7 +70,7 @@ impl<'word> Graph<'word> {
         }
     }
 
-    fn dfs(&self, seen: &mut HashSet::<usize>, idx: usize) {
+    fn dfs(&self, seen: &mut HashSet<usize>, idx: usize) {
         seen.insert(idx);
         let v = &self.vertices[idx];
 
