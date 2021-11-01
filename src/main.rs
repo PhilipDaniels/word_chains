@@ -1,4 +1,4 @@
-#[macro_use] extern crate structopt;
+extern crate structopt;
 
 mod dictionary;
 mod letter_differences;

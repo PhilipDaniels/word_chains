@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use std::io::{self, BufRead};
 use std::io::prelude::*;
 
-pub const DICT_OUT : &'static str = "./dictionaries_out";
-pub const CORPUS   : &'static str = "./dictionaries_out/corpus.txt";
+pub const DICT_OUT : &str = "./dictionaries_out";
+pub const CORPUS   : &str = "./dictionaries_out/corpus.txt";
 
-const DICT_IN : &'static str = "./dictionaries";
+const DICT_IN : &str = "./dictionaries";
 
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
 /// then creates a single merged dictionary called "corpus.txt" in the current folder.
@@ -20,19 +20,15 @@ pub fn create_merged_dictionary() {
 
         let num_words_at_start = words.len();
         let file = fs::File::open(path).expect("no such file");
-        let mut rdr = io::BufReader::new(file);
+        let rdr = io::BufReader::new(file);
 
         let mut num_words_read_from_file = 0;
-        for v in rdr.split(b'\n') {
-            match v {
-                Ok(bytes) => {
-                    num_words_read_from_file += 1;
-                    match String::from_utf8(bytes) {
-                        Ok(word) => { if let Some(w) = clean_word(word) { words.insert(w); }},
-                        Err(_) => {}
-                    }
-                },
-                Err(_) => {}
+        for bytes in rdr.split(b'\n').flatten() {
+            num_words_read_from_file += 1;
+            if let Ok(word) = String::from_utf8(bytes) {
+                if let Some(w) = clean_word(word) {
+                    words.insert(w);
+                }
             }
         }
 
@@ -65,7 +61,7 @@ fn write_corpus_file(words: HashSet<String>) {
     let mut words: Vec<String> = words.into_iter().collect();
     words.sort();
     for w in words {
-        write!(writer, "{}\n", w).unwrap();
+        writeln!(writer, "{}", w).unwrap();
     }
 
     println!("Wrote corpus.txt");

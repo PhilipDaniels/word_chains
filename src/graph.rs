@@ -9,14 +9,14 @@ pub struct Vertex<'word> {
 impl<'word> Vertex<'word> {
     fn new(word: &'word String) -> Self {
         Vertex {
-            word: word,
+            word,
             adjacency_list: Vec::new(),
             component : None
         }
     }
 
     fn word(&self) -> &String {
-        &self.word
+        self.word
     }
 }
 
@@ -75,7 +75,7 @@ impl<'word> Graph<'word> {
         let v = &self.vertices[idx];
 
         for i2 in &v.adjacency_list {
-            if seen.contains(&i2) {
+            if seen.contains(i2) {
                 continue;
             }
 

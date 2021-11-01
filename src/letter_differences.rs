@@ -1,20 +1,23 @@
 use std::fs;
-use std::io::{self, BufRead};
 use std::io::prelude::*;
+use std::io::{self, BufRead};
 
-use ::dictionary;
-use ::word_base::WordBase;
-use ::word_table::WordTable;
-use ::graph::Graph;
+use dictionary;
+use graph::Graph;
+use word_base::WordBase;
+use word_table::WordTable;
 
 struct AnchoredWords {
     anchor: String,
-    reachable_words: Vec<String>
+    reachable_words: Vec<String>,
 }
 
 impl AnchoredWords {
     fn new(anchor: String) -> Self {
-        AnchoredWords { anchor: anchor, reachable_words: Vec::new() }
+        AnchoredWords {
+            anchor,
+            reachable_words: Vec::new(),
+        }
     }
 
     fn add_reachable_word(&mut self, word: String) {
@@ -28,22 +31,27 @@ pub fn calculate_words_one_letter_different() {
     let keys = wordbase.sorted_keys();
     for key in keys {
         let word_table = &wordbase[key];
-        if word_table.words.len() <= 2 { continue };
-        let rwords_for_table = calc_reachable_words_for_table(&word_table);
+        if word_table.words.len() <= 2 {
+            continue;
+        };
+        let rwords_for_table = calc_reachable_words_for_table(word_table);
         // This is the initial difference file, includes 2-islands.
         write_difference_file(word_table.word_length(), &rwords_for_table);
         println!("Calculating graph");
-        let g = make_graph(&rwords_for_table);
+        let _g = make_graph(&rwords_for_table);
         println!("Calculating graph finished");
     }
 }
 
-fn make_graph(anchored_words: &Vec<AnchoredWords>) -> Graph {
+fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
     let mut g = Graph::new();
 
     // First load all the anchor words so the graph can calculate their indexes.
     // Ignore anchor words with no reachable words, they are not interesting.
-    let interesting_words : Vec<&AnchoredWords> = anchored_words.iter().filter(|aw| aw.reachable_words.len() > 0).collect();
+    let interesting_words: Vec<&AnchoredWords> = anchored_words
+        .iter()
+        .filter(|aw| !aw.reachable_words.is_empty())
+        .collect();
 
     for aw in &interesting_words {
         g.add_anchor_word(&aw.anchor);
@@ -78,7 +86,11 @@ fn get_words_by_length() -> WordBase {
     let keys = wordbase.sorted_keys();
 
     for key in keys {
-        println!("Number of words of length {:2} = {}", key, wordbase[key].words.len());
+        println!(
+            "Number of words of length {:2} = {}",
+            key,
+            wordbase[key].words.len()
+        );
     }
 
     wordbase
@@ -101,20 +113,28 @@ fn calc_reachable_words_for_table(wt: &WordTable) -> Vec<AnchoredWords> {
     all_anchored_words
 }
 
-fn write_difference_file(word_length: usize, anchored_words: &Vec<AnchoredWords>) {
-    let rw_filename = format!("{}/one_letter_different_{:02}.txt", dictionary::DICT_OUT, word_length);
+fn write_difference_file(word_length: usize, anchored_words: &[AnchoredWords]) {
+    let rw_filename = format!(
+        "{}/one_letter_different_{:02}.txt",
+        dictionary::DICT_OUT,
+        word_length
+    );
+
     println!("Writing {}", rw_filename);
     let rw_file = fs::File::create(rw_filename).unwrap();
     let mut writer = io::BufWriter::new(rw_file);
+
     for v in anchored_words {
         // Words which have no other reachable words are not interesting.
-        if v.reachable_words.len() == 0 { continue };
+        if v.reachable_words.is_empty() {
+            continue;
+        };
 
         write!(writer, "{} ", v.anchor).unwrap();
         for w in &v.reachable_words {
             write!(writer, "{} ", w).unwrap();
         }
-        write!(writer, "\n").unwrap();
+        writeln!(writer).unwrap();
     }
 }
 
@@ -131,7 +151,7 @@ fn one_letter_different(w1: &str, w2: &str) -> bool {
         }
     }
 
-    return num_diffs == 1
+    num_diffs == 1
 }
 
 /*

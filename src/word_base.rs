@@ -12,8 +12,8 @@ impl WordBase {
     }
 
     pub fn sorted_keys(&self) -> Vec<usize> {
-        let mut keys : Vec<usize> = self.words.keys().map(|&k| k).collect();
-        keys.sort();
+        let mut keys : Vec<_> = self.words.keys().copied().collect();
+        keys.sort_unstable();
         keys
     }
 }
@@ -35,7 +35,7 @@ impl IndexMut<usize> for WordBase {
 impl AddAssign<String> for WordBase {
     fn add_assign(&mut self, word: String) {
         let len = word.len();
-        let wt = self.words.entry(len).or_insert(WordTable::new(len));
+        let wt = self.words.entry(len).or_insert_with(|| WordTable::new(len));
         wt.words.push(word);
     }
 }
