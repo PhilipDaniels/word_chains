@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 pub struct Vertex<'word> {
     word: &'word String,
     adjacency_list: Vec<usize>,
-    pub component: Option<usize>
+    pub component: Option<usize>,
 }
 
 impl<'word> Vertex<'word> {
@@ -11,7 +11,7 @@ impl<'word> Vertex<'word> {
         Vertex {
             word,
             adjacency_list: Vec::new(),
-            component : None
+            component: None,
         }
     }
 
@@ -29,7 +29,7 @@ impl<'word> Graph<'word> {
     pub fn new() -> Self {
         Graph {
             vertices: Vec::new(),
-            word_to_index : HashMap::new()
+            word_to_index: HashMap::new(),
         }
     }
 
@@ -39,7 +39,11 @@ impl<'word> Graph<'word> {
         self.word_to_index.insert(word, self.vertices.len() - 1);
     }
 
-    pub fn add_reachable_word(&mut self, anchor_word: &'word String, reachable_word: &'word String) {
+    pub fn add_reachable_word(
+        &mut self,
+        anchor_word: &'word String,
+        reachable_word: &'word String,
+    ) {
         let anchor_index = self.word_to_index[anchor_word];
         let reachable_word_index = self.word_to_index[reachable_word];
         let vertex = &mut self.vertices[anchor_index];
@@ -63,7 +67,11 @@ impl<'word> Graph<'word> {
             }
 
             if seen.len() > 2 {
-                println!("Set component number of {} on {} vertices", next_component_number, seen.len());
+                println!(
+                    "Set component number of {} on {} vertices",
+                    next_component_number,
+                    seen.len()
+                );
             }
 
             next_component_number += 1;
