@@ -2,5 +2,5 @@
 
 members = [
     "dictionary_merger",
-    "calc_hamming_one_words",
+    "calc_one_letter_different_words",
 ]

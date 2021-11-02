@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ops::{AddAssign, Index, IndexMut};
-use word_table::WordTable;
+use crate::word_table::WordTable;
 
 pub struct WordBase {
     pub words: HashMap<usize, WordTable>,

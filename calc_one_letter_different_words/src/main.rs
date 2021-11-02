@@ -10,6 +10,9 @@ use graph::Graph;
 use word_base::WordBase;
 use word_table::WordTable;
 
+const DICT_OUT: &str = "./../dictionaries_out";
+const CORPUS: &str = "./../dictionaries_out/corpus.txt";
+
 fn main() {
     let wordbase = get_words_by_length();
 
@@ -72,19 +75,19 @@ fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
 }
 
 fn get_words_by_length() -> WordBase {
-    let f = fs::File::open(dictionary::CORPUS).unwrap();
+    let f = fs::File::open(CORPUS).unwrap();
     let rdr = io::BufReader::new(f);
 
     let mut wordbase = WordBase::new();
 
-    println!("Start reading {}", dictionary::CORPUS);
+    println!("Start reading {}", CORPUS);
 
     for word in rdr.lines() {
         let word = word.unwrap();
         wordbase += word;
     }
 
-    println!("Finished reading {}", dictionary::CORPUS);
+    println!("Finished reading {}", CORPUS);
 
     let keys = wordbase.sorted_keys();
 
@@ -119,7 +122,7 @@ fn calc_reachable_words_for_table(wt: &WordTable) -> Vec<AnchoredWords> {
 fn write_difference_file(word_length: usize, anchored_words: &[AnchoredWords]) {
     let rw_filename = format!(
         "{}/one_letter_different_{:02}.txt",
-        dictionary::DICT_OUT,
+        DICT_OUT,
         word_length
     );
 
