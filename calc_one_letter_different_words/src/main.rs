@@ -2,23 +2,22 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 
+mod corpus;
 mod graph;
-mod word_base;
-mod word_table;
 
+use corpus::{Corpus, WordLengthSet};
 use graph::Graph;
-use word_base::WordBase;
-use word_table::WordTable;
 
-const DICT_OUT: &str = "./../dictionaries_out";
-const CORPUS: &str = "./../dictionaries_out/corpus.txt";
+const DICT_OUT_DIR: &str = "./../dictionaries_out";
+const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
 
 fn main() {
-    let wordbase = get_words_by_length();
+    let corpus = get_words_by_length();
 
-    let keys = wordbase.sorted_keys();
+    let keys = corpus.sorted_keys();
+    // This lot can be done in parallel.
     for key in keys {
-        let word_table = &wordbase[key];
+        let word_table = &corpus[key];
         if word_table.words.len() <= 2 {
             continue;
         };
@@ -30,6 +29,61 @@ fn main() {
         println!("Calculating graph finished");
     }
 }
+
+/// Read in the entire word CORPUS and form it into a WordMap.
+fn get_words_by_length() -> Corpus {
+    println!("Start reading {}", CORPUS_FILE);
+
+    let f = fs::File::open(CORPUS_FILE).unwrap();
+    let rdr = io::BufReader::new(f);
+
+    let mut corpus = Corpus::new();
+
+    for word in rdr.lines() {
+        let word = word.unwrap();
+        corpus += word;
+    }
+
+    println!("Finished reading {}", CORPUS_FILE);
+
+    let keys = corpus.sorted_keys();
+
+    for key in keys {
+        println!(
+            "Number of words of length {:2} = {}",
+            key,
+            corpus[key].words.len()
+        );
+    }
+
+    corpus
+}
+
+fn calc_reachable_words_for_table(wt: &WordLengthSet) -> Vec<AnchoredWords> {
+    let mut all_anchored_words = Vec::new();
+    for w1 in &wt.words {
+        let mut anchored_words = AnchoredWords::new(w1.clone());
+        // Followed by all the words that are one letter different.
+        for w2 in &wt.words {
+            if one_letter_different(w1, w2) {
+                anchored_words.add_reachable_word(w2.clone());
+            }
+        }
+
+        all_anchored_words.push(anchored_words);
+    }
+
+    all_anchored_words
+}
+
+
+
+
+
+
+
+
+
 
 struct AnchoredWords {
     anchor: String,
@@ -48,6 +102,10 @@ impl AnchoredWords {
         self.reachable_words.push(word);
     }
 }
+
+
+
+
 
 fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
     let mut g = Graph::new();
@@ -74,55 +132,14 @@ fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
     g
 }
 
-fn get_words_by_length() -> WordBase {
-    let f = fs::File::open(CORPUS).unwrap();
-    let rdr = io::BufReader::new(f);
 
-    let mut wordbase = WordBase::new();
 
-    println!("Start reading {}", CORPUS);
 
-    for word in rdr.lines() {
-        let word = word.unwrap();
-        wordbase += word;
-    }
-
-    println!("Finished reading {}", CORPUS);
-
-    let keys = wordbase.sorted_keys();
-
-    for key in keys {
-        println!(
-            "Number of words of length {:2} = {}",
-            key,
-            wordbase[key].words.len()
-        );
-    }
-
-    wordbase
-}
-
-fn calc_reachable_words_for_table(wt: &WordTable) -> Vec<AnchoredWords> {
-    let mut all_anchored_words = Vec::new();
-    for w1 in &wt.words {
-        let mut anchored_words = AnchoredWords::new(w1.clone());
-        // Followed by all the words that are one letter different.
-        for w2 in &wt.words {
-            if one_letter_different(w1, w2) {
-                anchored_words.add_reachable_word(w2.clone());
-            }
-        }
-
-        all_anchored_words.push(anchored_words);
-    }
-
-    all_anchored_words
-}
 
 fn write_difference_file(word_length: usize, anchored_words: &[AnchoredWords]) {
     let rw_filename = format!(
         "{}/one_letter_different_{:02}.txt",
-        DICT_OUT,
+        DICT_OUT_DIR,
         word_length
     );
 

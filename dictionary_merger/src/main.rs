@@ -3,15 +3,15 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 
-const DICT_IN: &str = "./../dictionaries";
-const DICT_OUT: &str = "./../dictionaries_out";
-const CORPUS: &str = "./../dictionaries_out/corpus.txt";
+const DICT_IN_DIR: &str = "./../dictionaries";
+const DICT_OUT_DIR: &str = "./../dictionaries_out";
+const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
 
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
 /// then creates a single merged dictionary called "corpus.txt" in the current folder.
 fn main() {
     let mut words = HashSet::new();
-    let paths = fs::read_dir(DICT_IN).expect("Could not locate dictionaries folder");
+    let paths = fs::read_dir(DICT_IN_DIR).expect("Could not locate dictionaries folder");
 
     for path in paths {
         let path = path.unwrap().path();
@@ -58,8 +58,8 @@ fn clean_word(w: String) -> Option<String> {
 }
 
 fn write_corpus_file(words: HashSet<String>) {
-    fs::create_dir_all(DICT_OUT).unwrap();
-    let out_file = fs::File::create(CORPUS).expect("Can create corpus.txt");
+    fs::create_dir_all(DICT_OUT_DIR).unwrap();
+    let out_file = fs::File::create(CORPUS_FILE).expect("Can create corpus.txt");
     let mut writer = io::BufWriter::new(out_file);
     let mut words: Vec<_> = words.into_iter().collect();
     words.sort_unstable();

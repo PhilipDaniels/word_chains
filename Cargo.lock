@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "calc_hamming_one_words"
+name = "calc_one_letter_different_words"
 version = "0.1.0"
 
 [[package]]
