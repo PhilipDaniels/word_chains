@@ -3,14 +3,14 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 
-pub const DICT_OUT: &str = "./dictionaries_out";
-pub const CORPUS: &str = "./dictionaries_out/corpus.txt";
+pub const DICT_OUT: &str = "./../dictionaries_out";
+pub const CORPUS: &str = "./../dictionaries_out/corpus.txt";
 
-const DICT_IN: &str = "./dictionaries";
+const DICT_IN: &str = "./../dictionaries";
 
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
 /// then creates a single merged dictionary called "corpus.txt" in the current folder.
-pub fn create_merged_dictionary() {
+fn main() {
     let mut words = HashSet::new();
     let paths = fs::read_dir(DICT_IN).expect("Could not locate dictionaries folder");
 
@@ -70,3 +70,4 @@ fn write_corpus_file(words: HashSet<String>) {
 
     println!("Wrote corpus.txt");
 }
+

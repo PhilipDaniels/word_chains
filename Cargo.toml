@@ -1,7 +1,6 @@
-[package]
-name = "word_chains"
-version = "0.1.0"
-authors = ["Philip Daniels <Philip.Daniels1971@gmail.com>"]
+[workspace]
 
-[dependencies]
-structopt = "0.2"
+members = [
+    "dictionary_merger",
+    "calc_hamming_one_words",
+]

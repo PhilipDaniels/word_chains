@@ -2,10 +2,31 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 
-use dictionary;
+mod graph;
+mod word_base;
+mod word_table;
+
 use graph::Graph;
 use word_base::WordBase;
 use word_table::WordTable;
+
+fn main() {
+    let wordbase = get_words_by_length();
+
+    let keys = wordbase.sorted_keys();
+    for key in keys {
+        let word_table = &wordbase[key];
+        if word_table.words.len() <= 2 {
+            continue;
+        };
+        let rwords_for_table = calc_reachable_words_for_table(word_table);
+        // This is the initial difference file, includes 2-islands.
+        write_difference_file(word_table.word_length(), &rwords_for_table);
+        println!("Calculating graph");
+        let _g = make_graph(&rwords_for_table);
+        println!("Calculating graph finished");
+    }
+}
 
 struct AnchoredWords {
     anchor: String,
@@ -22,24 +43,6 @@ impl AnchoredWords {
 
     fn add_reachable_word(&mut self, word: String) {
         self.reachable_words.push(word);
-    }
-}
-
-pub fn calculate_words_one_letter_different() {
-    let wordbase = get_words_by_length();
-
-    let keys = wordbase.sorted_keys();
-    for key in keys {
-        let word_table = &wordbase[key];
-        if word_table.words.len() <= 2 {
-            continue;
-        };
-        let rwords_for_table = calc_reachable_words_for_table(word_table);
-        // This is the initial difference file, includes 2-islands.
-        write_difference_file(word_table.word_length(), &rwords_for_table);
-        println!("Calculating graph");
-        let _g = make_graph(&rwords_for_table);
-        println!("Calculating graph finished");
     }
 }
 
