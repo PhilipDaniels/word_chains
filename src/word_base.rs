@@ -1,18 +1,20 @@
 use std::collections::HashMap;
-use std::ops::{Index, IndexMut, AddAssign};
-use ::word_table::WordTable;
+use std::ops::{AddAssign, Index, IndexMut};
+use word_table::WordTable;
 
 pub struct WordBase {
-    pub words: HashMap<usize, WordTable>
+    pub words: HashMap<usize, WordTable>,
 }
 
 impl WordBase {
     pub fn new() -> Self {
-        WordBase { words: HashMap::new() }
+        WordBase {
+            words: HashMap::new(),
+        }
     }
 
     pub fn sorted_keys(&self) -> Vec<usize> {
-        let mut keys : Vec<_> = self.words.keys().copied().collect();
+        let mut keys: Vec<_> = self.words.keys().copied().collect();
         keys.sort_unstable();
         keys
     }
@@ -21,13 +23,13 @@ impl WordBase {
 impl Index<usize> for WordBase {
     type Output = WordTable;
 
-    fn index(&self, word_length: usize) -> &WordTable {
+    fn index(&self, word_length: usize) -> &Self::Output {
         &self.words[&word_length]
     }
 }
 
 impl IndexMut<usize> for WordBase {
-    fn index_mut(&mut self, word_length: usize) -> &mut WordTable {
+    fn index_mut(&mut self, word_length: usize) -> &mut Self::Output {
         self.words.get_mut(&word_length).unwrap()
     }
 }
