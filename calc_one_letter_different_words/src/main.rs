@@ -5,29 +5,29 @@ use std::io::{self, BufRead};
 mod corpus;
 
 use corpus::Corpus;
+use rayon::prelude::*;
 
 const DICT_OUT_DIR: &str = "./../dictionaries_out";
 const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
 
 fn main() {
-    let corpus = get_words_by_length();
+    let corpus = read_corpus_file();
     let keys = corpus.sorted_keys();
 
-    // This lot can be done in parallel.
+    keys.par_iter()
+        .for_each(|&key| {
+            let words = &corpus[key];
+            if words.len() <= 2 {
+                return;
+            };
 
-    for key in keys {
-        let words = &corpus[key];
-        if words.len() <= 2 {
-            continue;
-        };
-
-        let reachable_words = calc_reachable_words(words);
-        write_difference_file(&reachable_words);
-    }
+            let reachable_words = calc_reachable_words(words);
+            write_difference_file(&reachable_words);
+        });
 }
 
 /// Read in the entire word CORPUS and form it into a WordMap.
-fn get_words_by_length() -> Corpus {
+fn read_corpus_file() -> Corpus {
     println!("Start reading {}", CORPUS_FILE);
 
     let f = fs::File::open(CORPUS_FILE).unwrap();
