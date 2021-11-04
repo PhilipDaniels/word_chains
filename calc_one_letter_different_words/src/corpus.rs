@@ -4,11 +4,11 @@ use std::ops::{AddAssign, Index, IndexMut};
 /// Represents all the words we are interested in, organized
 /// in a HashMap by their length.
 pub struct Corpus {
-    pub words: HashMap<usize, WordLengthSet>,
+    pub words: HashMap<usize, WordSet>,
 }
 
 /// Represents all the words of a particular length.
-pub struct WordLengthSet {
+pub struct WordSet {
     word_length: usize,
     pub words: Vec<String>,
 }
@@ -28,7 +28,7 @@ impl Corpus {
 }
 
 impl Index<usize> for Corpus {
-    type Output = WordLengthSet;
+    type Output = WordSet;
 
     fn index(&self, word_length: usize) -> &Self::Output {
         &self.words[&word_length]
@@ -48,12 +48,12 @@ impl AddAssign<String> for Corpus {
         let wt = self
             .words
             .entry(len)
-            .or_insert_with(|| WordLengthSet::new(len));
+            .or_insert_with(|| WordSet::new(len));
         wt.words.push(word);
     }
 }
 
-impl WordLengthSet {
+impl WordSet {
     pub fn new(word_length: usize) -> Self {
         Self {
             word_length,

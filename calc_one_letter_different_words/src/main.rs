@@ -5,8 +5,7 @@ use std::io::{self, BufRead};
 mod corpus;
 mod graph;
 
-use corpus::{Corpus, WordLengthSet};
-use graph::Graph;
+use corpus::{Corpus, WordSet};
 
 const DICT_OUT_DIR: &str = "./../dictionaries_out";
 const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
@@ -24,9 +23,9 @@ fn main() {
         let rwords_for_table = calc_reachable_words_for_table(word_table);
         // This is the initial difference file, includes 2-islands.
         write_difference_file(word_table.word_length(), &rwords_for_table);
-        println!("Calculating graph");
-        let _g = make_graph(&rwords_for_table);
-        println!("Calculating graph finished");
+        //println!("Calculating graph");
+        //let _g = make_graph(&rwords_for_table);
+        //println!("Calculating graph finished");
     }
 }
 
@@ -59,7 +58,7 @@ fn get_words_by_length() -> Corpus {
     corpus
 }
 
-fn calc_reachable_words_for_table(wt: &WordLengthSet) -> Vec<AnchoredWords> {
+fn calc_reachable_words_for_table(wt: &WordSet) -> Vec<AnchoredWords> {
     let mut all_anchored_words = Vec::new();
     for w1 in &wt.words {
         let mut anchored_words = AnchoredWords::new(w1.clone());
@@ -75,6 +74,49 @@ fn calc_reachable_words_for_table(wt: &WordLengthSet) -> Vec<AnchoredWords> {
 
     all_anchored_words
 }
+
+fn one_letter_different(w1: &str, w2: &str) -> bool {
+    assert_eq!(w1.len(), w2.len());
+
+    let mut num_diffs = 0;
+    for (a, b) in w1.chars().zip(w2.chars()) {
+        if a != b {
+            num_diffs += 1;
+        }
+        if num_diffs == 2 {
+            return false;
+        }
+    }
+
+    num_diffs == 1
+}
+
+fn write_difference_file(word_length: usize, anchored_words: &[AnchoredWords]) {
+    let rw_filename = format!(
+        "{}/one_letter_different_{:02}.txt",
+        DICT_OUT_DIR,
+        word_length
+    );
+
+    println!("Writing {}", rw_filename);
+    let rw_file = fs::File::create(rw_filename).unwrap();
+    let mut writer = io::BufWriter::new(rw_file);
+
+    for v in anchored_words {
+        // Words which have no other reachable words are not interesting.
+        if v.reachable_words.is_empty() {
+            continue;
+        };
+
+        write!(writer, "{} ", v.anchor).unwrap();
+        for w in &v.reachable_words {
+            write!(writer, "{} ", w).unwrap();
+        }
+        writeln!(writer).unwrap();
+    }
+}
+
+
 
 
 
@@ -106,7 +148,7 @@ impl AnchoredWords {
 
 
 
-
+/*
 fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
     let mut g = Graph::new();
 
@@ -131,51 +173,10 @@ fn make_graph(anchored_words: &[AnchoredWords]) -> Graph {
     g.calculate_components();
     g
 }
+*/
 
 
 
-
-
-fn write_difference_file(word_length: usize, anchored_words: &[AnchoredWords]) {
-    let rw_filename = format!(
-        "{}/one_letter_different_{:02}.txt",
-        DICT_OUT_DIR,
-        word_length
-    );
-
-    println!("Writing {}", rw_filename);
-    let rw_file = fs::File::create(rw_filename).unwrap();
-    let mut writer = io::BufWriter::new(rw_file);
-
-    for v in anchored_words {
-        // Words which have no other reachable words are not interesting.
-        if v.reachable_words.is_empty() {
-            continue;
-        };
-
-        write!(writer, "{} ", v.anchor).unwrap();
-        for w in &v.reachable_words {
-            write!(writer, "{} ", w).unwrap();
-        }
-        writeln!(writer).unwrap();
-    }
-}
-
-fn one_letter_different(w1: &str, w2: &str) -> bool {
-    assert_eq!(w1.len(), w2.len());
-
-    let mut num_diffs = 0;
-    for (a, b) in w1.chars().zip(w2.chars()) {
-        if a != b {
-            num_diffs += 1;
-        }
-        if num_diffs == 2 {
-            return false;
-        }
-    }
-
-    num_diffs == 1
-}
 
 /*
 void CalculateReachableWordsUsingPrefix()
