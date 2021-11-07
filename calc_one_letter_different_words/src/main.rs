@@ -56,21 +56,19 @@ fn read_corpus_file() -> Corpus {
 }
 
 fn calc_reachable_words(words: &[String]) -> Vec<AnchoredWords> {
-    let mut all_anchored_words = Vec::new();
-    for w1 in words {
-        let mut anchored_words = AnchoredWords::new(w1.clone());
+    words.par_iter()
+        .map(|w1| {
+            let mut anchored_words = AnchoredWords::new(w1.clone());
 
-        // Followed by all the words that are one letter different.
-        for w2 in words {
-            if one_letter_different(w1, w2) {
-                anchored_words.add_reachable_word(w2.clone());
+            // Find all the words that are one letter different.
+            for w2 in words {
+                if one_letter_different(w1, w2) {
+                    anchored_words.add_reachable_word(w2.clone());
+                }
             }
-        }
 
-        all_anchored_words.push(anchored_words);
-    }
-
-    all_anchored_words
+            anchored_words
+        }).collect()
 }
 
 fn one_letter_different(w1: &str, w2: &str) -> bool {
