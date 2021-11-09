@@ -29,6 +29,11 @@ pub struct Graph {
 }
 
 impl Graph {
+    /// Returns the length of the words in this graph.
+    pub fn word_length(&self) -> usize {
+        self.vertices[0].word.len()
+    }
+
     /// Reads in the specified difference file (e.g. "one_letter_different_05.txt")
     /// and returns a graph with all its vertices correctly linked and its
     /// components calculated.

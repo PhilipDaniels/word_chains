@@ -158,4 +158,5 @@ name = "word_chain_calculator"
 version = "0.1.0"
 dependencies = [
  "graph",
+ "rayon",
 ]

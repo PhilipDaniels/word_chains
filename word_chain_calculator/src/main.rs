@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+use rayon::prelude::*;
 
 use graph::{Graph, get_graph_stats};
 
@@ -15,17 +16,22 @@ fn main() {
         None => RangeInclusive::new(1, 30)
     };
 
-    let _graphs: Vec<_> = word_lengths
+    let mut graphs: Vec<_> = word_lengths
+        .into_par_iter()
         .filter_map(|word_length| {
             let filename = format!("../dictionaries_out/one_letter_different_{:02}.txt", word_length);
 
             Graph::load_from_difference_file(&filename)
                 .map(|graph| {
                     let stats = get_graph_stats(&graph);
-                    println!("{:?}", stats);
                     (graph, stats)
                 })
                 .ok()
         })
         .collect();
+
+    graphs.sort_unstable_by(|a, b| a.0.word_length().cmp(&b.0.word_length()));
+    for gs in &graphs {
+        println!("{:?}", gs.1);
+    }
 }
