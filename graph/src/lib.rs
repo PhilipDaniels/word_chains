@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 use std::io::{self, BufRead, BufReader};
-use std::iter::FromIterator;
 use std::{collections::HashMap, fs::File, path::Path};
 
+#[derive(Debug)]
 pub struct Vertex {
     word: String,
     adjacency_list: Vec<usize>,
@@ -21,6 +21,7 @@ impl From<String> for Vertex {
 
 /// Represents a graph of words of length N. This is really a forest, because
 /// there may be (in fact, probably are) multiple components within the graph.
+#[derive(Debug)]
 pub struct Graph {
     vertices: Vec<Vertex>,
     // Provide a fast way of looking up the index of a word.
@@ -70,6 +71,7 @@ impl Graph {
                 words_in_line.map(|w| graph.get_index_for_word(w)).collect();
         }
 
+        graph.calculate_components();
         Ok(graph)
     }
 
@@ -79,8 +81,7 @@ impl Graph {
         let vertex = word.clone().into();
         self.vertices.push(vertex);
 
-        self.word_to_index
-            .insert(word.into(), self.vertices.len() - 1);
+        self.word_to_index.insert(word, self.vertices.len() - 1);
     }
 
     // TODO: Implement Index<str>.
@@ -106,9 +107,9 @@ impl Graph {
                     self.vertices[i].component = next_component_number;
                 }
             }
-        }
 
-        next_component_number += 1;
+            next_component_number += 1;
+        }
     }
 
     fn dfs(&self, seen: &mut HashSet<usize>, idx: usize) {
@@ -156,42 +157,49 @@ impl WordLengthStatistics {
 
 /// Calculates various interesting statistics for a word graph.
 pub fn get_graph_stats(graph: &Graph) -> WordLengthStatistics {
-    let mut stats = WordLengthStatistics::default();
-
-    stats.word_length = graph.vertices[0].word.len();
-    stats.total_word_count = graph.vertices.len();
-
+    let mut stats = WordLengthStatistics {
+        word_length: graph.vertices[0].word.len(),
+        total_word_count: graph.vertices.len(),
+        ..Default::default()
+    };
+    
     let components = components(graph);
    
     stats.num_components = components.len();
 
     stats.num_one_islands = components
         .iter()
-        .filter(|(_, comp_count)| *comp_count == 1)
+        .filter(|c| c.num_vertices == 1)
         .count();
     
     stats.num_two_islands = components
         .iter()
-        .filter(|(_, comp_count)| *comp_count == 2)
+        .filter(|c| c.num_vertices == 2)
         .count();
     
     stats.num_three_islands = components
         .iter()
-        .filter(|(_, comp_count)| *comp_count == 3)
+        .filter(|c| c.num_vertices == 3)
         .count();
     
     stats.largest_five_component_counts = components
         .iter()
         .take(5)
-        .map(|(_, comp_count)| *comp_count)
+        .map(|c| c.num_vertices)
         .collect();
 
     stats
 }
 
+#[derive(Debug)]
+pub struct Component {
+    pub number: usize,
+    pub num_vertices: usize,
+}
+
 /// Analyze the components in the graph, returning a map of component -> num vertices
-/// sorted by number of vertices in the components.
-fn components(graph: &Graph) -> Vec<(usize, usize)> {
+/// sorted by number of vertices in the components, descending.
+fn components(graph: &Graph) -> Vec<Component> {
     let mut map = HashMap::<usize, usize>::new();
 
     for v in &graph.vertices {
@@ -201,8 +209,9 @@ fn components(graph: &Graph) -> Vec<(usize, usize)> {
 
     let mut v: Vec<_> = map
         .iter()
-        .map(|(comp_num, comp_count)| (*comp_num, *comp_count))
+        .map(|(&number, &num_vertices)| Component { number, num_vertices })
         .collect();
-    v.sort_unstable_by(|a, b| a.1.cmp(&b.1));
+
+    v.sort_unstable_by(|a, b| b.num_vertices.cmp(&a.num_vertices));
     v
 }
