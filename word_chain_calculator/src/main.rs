@@ -41,6 +41,5 @@ TxMax is the maximum number of reachable words for a particular word in the grap
 TxMaxWord is that word
 TxMaxWordReachables is all the words that can be reached from it.graph
 
-Consider not excluding 1-islands from reachacbale words - generate the whole forest
 Ability to extract just the largest component into a separate graph
  */

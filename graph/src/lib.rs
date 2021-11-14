@@ -139,9 +139,9 @@ pub struct WordLengthStatistics {
     pub word_length: usize,
     pub total_word_count: usize,
     pub num_components: usize,
-    pub num_one_islands: usize,
-    pub num_two_islands: usize,
-    pub num_three_islands: usize,
+    pub num_one_components: usize,
+    pub num_two_components: usize,
+    pub num_three_components: usize,
     pub largest_five_component_counts: Vec<usize>,
     pub lc_leaf_count: usize,
 }
@@ -172,17 +172,17 @@ pub fn get_graph_stats(graph: &Graph) -> WordLengthStatistics {
    
     stats.num_components = components.len();
 
-    stats.num_one_islands = components
+    stats.num_one_components = components
         .iter()
         .filter(|c| c.num_vertices == 1)
         .count();
     
-    stats.num_two_islands = components
+    stats.num_two_components = components
         .iter()
         .filter(|c| c.num_vertices == 2)
         .count();
     
-    stats.num_three_islands = components
+    stats.num_three_components = components
         .iter()
         .filter(|c| c.num_vertices == 3)
         .count();
