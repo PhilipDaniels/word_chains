@@ -144,6 +144,9 @@ pub struct WordLengthStatistics {
     pub num_three_components: usize,
     pub largest_five_component_counts: Vec<usize>,
     pub largest_component_leaf_count: usize,
+    pub max_adjacents_count: usize,
+    pub max_adjacents_word: String,
+    pub max_adjacencts_list: Vec<String>,
 }
 
 impl WordLengthStatistics {
@@ -152,16 +155,20 @@ impl WordLengthStatistics {
     }
 
     pub fn largest_component_percent_of_total(&self) -> f64 {
-        self.largest_component_word_count() as f64 / self.total_word_count as f64
+        100.0 * self.largest_component_word_count() as f64 / self.total_word_count as f64
     }
 
     pub fn largest_component_upper_bound(&self) -> usize {
-        self.largest_component_word_count() - self.largest_component_leaf_count + 2
+        if self.largest_component_leaf_count == 0 {
+            self.largest_component_word_count()
+        } else {
+            self.largest_component_word_count() - self.largest_component_leaf_count + 2    
+        }
     }
 }
 
 /// Calculates various interesting statistics for a word graph.
-pub fn get_graph_stats(graph: &Graph) -> WordLengthStatistics {
+pub fn calculate_graph_stats(graph: &Graph) -> WordLengthStatistics {
     let mut stats = WordLengthStatistics {
         word_length: graph.vertices[0].word.len(),
         total_word_count: graph.vertices.len(),
@@ -180,6 +187,23 @@ pub fn get_graph_stats(graph: &Graph) -> WordLengthStatistics {
 
     stats.largest_five_component_counts =
         components.iter().take(5).map(|c| c.num_vertices).collect();
+
+    let largest_component_number = components[0].number;
+    stats.largest_component_leaf_count = graph
+        .vertices
+        .iter()
+        .filter(|v| v.component == largest_component_number && v.adjacency_list.len() == 1)
+        .count();
+
+    if let Some(largest_vertex) = graph.vertices.iter().max_by_key(|v| v.adjacency_list.len()) {
+        stats.max_adjacents_count = largest_vertex.adjacency_list.len();
+        stats.max_adjacents_word = largest_vertex.word.clone();
+        stats.max_adjacencts_list = largest_vertex
+            .adjacency_list
+            .iter()
+            .map(|idx| graph.vertices[*idx].word.clone())
+            .collect();
+    }
 
     stats
 }

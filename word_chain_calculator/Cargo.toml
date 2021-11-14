@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 graph = { path = "../graph" }
 rayon = "1.5"
+csv = "1.1"
