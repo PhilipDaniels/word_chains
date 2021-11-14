@@ -1,36 +1,48 @@
-use std::fs;
-use std::io::prelude::*;
-use std::io::{self, BufRead};
-
-mod corpus;
-
-use corpus::Corpus;
 use rayon::prelude::*;
+use std::io::Write;
+use std::{
+    collections::HashMap,
+    fs,
+    io::{self, BufRead},
+    ops::{AddAssign, Index, IndexMut},
+    path::Path,
+};
 
-const DICT_OUT_DIR: &str = "./../dictionaries_out";
-const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
+use crate::CommandLineOptions;
 
-fn main() {
-    let corpus = read_corpus_file();
+/// Reads in the entire word corpus and for each word, calculates its adjacency list,
+/// that is, all the words that can be formed by changing just a single character
+/// in the original word.
+pub(crate) fn calculate_corpus_adjacency_lists(options: &CommandLineOptions) {
+    println!(
+        "Calculating word adjacency lists based on {:?}",
+        options.corpus_file()
+    );
+    let corpus = read_corpus_file(&options.corpus_file());
+
+    println!("Finished reading {:?}", &options.corpus_file());
     let keys = corpus.sorted_keys();
+    for key in &keys {
+        println!(
+            "Number of words of length {:2} = {}",
+            key,
+            corpus[*key].len()
+        );
+    }
 
-    keys.par_iter()
-        .for_each(|&key| {
-            let words = &corpus[key];
-            if words.len() <= 2 {
-                return;
-            };
+    keys.par_iter().for_each(|&key| {
+        let words = &corpus[key];
+        if words.len() <= 2 {
+            return;
+        };
 
-            let reachable_words = calc_reachable_words(words);
-            write_difference_file(&reachable_words);
-        });
+        let adjacency_lists = calc_adjacency_lists(words);
+        write_adjacency_list_file(options, &adjacency_lists);
+    });
 }
 
-/// Read in the entire word CORPUS and form it into a WordMap.
-fn read_corpus_file() -> Corpus {
-    println!("Start reading {}", CORPUS_FILE);
-
-    let f = fs::File::open(CORPUS_FILE).unwrap();
+fn read_corpus_file(corpus_file: &Path) -> Corpus {
+    let f = fs::File::open(corpus_file).unwrap();
     let rdr = io::BufReader::new(f);
 
     let mut corpus = Corpus::new();
@@ -40,35 +52,25 @@ fn read_corpus_file() -> Corpus {
         corpus += word;
     }
 
-    println!("Finished reading {}", CORPUS_FILE);
-
-    let keys = corpus.sorted_keys();
-
-    for key in keys {
-        println!(
-            "Number of words of length {:2} = {}",
-            key,
-            corpus[key].len()
-        );
-    }
-
     corpus
 }
 
-fn calc_reachable_words(words: &[String]) -> Vec<AnchoredWords> {
-    words.par_iter()
+fn calc_adjacency_lists(words: &[String]) -> Vec<WordAdjacencyList> {
+    words
+        .par_iter()
         .map(|w1| {
-            let mut anchored_words = AnchoredWords::new(w1.clone());
+            let mut adjaceny_list = WordAdjacencyList::new(w1.clone());
 
             // Find all the words that are one letter different.
             for w2 in words {
                 if one_letter_different(w1, w2) {
-                    anchored_words.add_reachable_word(w2.clone());
+                    adjaceny_list.add_adjacent_word(w2.clone());
                 }
             }
 
-            anchored_words
-        }).collect()
+            adjaceny_list
+        })
+        .collect()
 }
 
 fn one_letter_different(w1: &str, w2: &str) -> bool {
@@ -87,27 +89,23 @@ fn one_letter_different(w1: &str, w2: &str) -> bool {
     num_diffs == 1
 }
 
-fn write_difference_file(anchored_words: &[AnchoredWords]) {
-    if anchored_words.is_empty()
-        || anchored_words
+/// Writes one adjacency list file for a particular word length.
+fn write_adjacency_list_file(options: &CommandLineOptions, adjacency_lists: &[WordAdjacencyList]) {
+    if adjacency_lists.is_empty()
+        || adjacency_lists
             .iter()
-            .all(|aw| aw.reachable_words.is_empty())
+            .all(|aw| aw.adjacent_words.is_empty())
     {
         return;
     }
 
-    let word_length = anchored_words[0].anchor.len();
-
-    let filename = format!(
-        "{}/one_letter_different_{:02}.txt",
-        DICT_OUT_DIR, word_length
-    );
-
-    println!("Writing {}", filename);
+    let word_length = adjacency_lists[0].anchor.len();
+    let filename = options.all_adjacency_file(word_length);
+    println!("Writing {:?}", filename);
     let rw_file = fs::File::create(filename).unwrap();
     let mut writer = io::BufWriter::new(rw_file);
 
-    for v in anchored_words {
+    for v in adjacency_lists {
         // Words which have no other reachable words are not interesting.
         // ...except for generating stats later on.
         //if v.reachable_words.is_empty() {
@@ -115,26 +113,26 @@ fn write_difference_file(anchored_words: &[AnchoredWords]) {
         //};
 
         write!(writer, "{} ", v.anchor).unwrap();
-        let words = v.reachable_words.join(" ");
+        let words = v.adjacent_words.join(" ");
         writeln!(writer, "{}", words).unwrap();
     }
 }
 
-struct AnchoredWords {
+struct WordAdjacencyList {
     anchor: String,
-    reachable_words: Vec<String>,
+    adjacent_words: Vec<String>,
 }
 
-impl AnchoredWords {
+impl WordAdjacencyList {
     fn new(anchor: String) -> Self {
-        AnchoredWords {
+        WordAdjacencyList {
             anchor,
-            reachable_words: Vec::new(),
+            adjacent_words: Vec::new(),
         }
     }
 
-    fn add_reachable_word(&mut self, word: String) {
-        self.reachable_words.push(word);
+    fn add_adjacent_word(&mut self, word: String) {
+        self.adjacent_words.push(word);
     }
 }
 
@@ -206,3 +204,45 @@ void AddWordsFromPrefix(Word anchor, Prefix prefix)
     }
 }
 */
+
+/// Represents all the words we are interested in, organized
+/// in a HashMap by their length.
+pub struct Corpus {
+    pub words: HashMap<usize, Vec<String>>,
+}
+
+impl Corpus {
+    pub fn new() -> Self {
+        Corpus {
+            words: HashMap::new(),
+        }
+    }
+
+    pub fn sorted_keys(&self) -> Vec<usize> {
+        let mut keys: Vec<_> = self.words.keys().copied().collect();
+        keys.sort_unstable();
+        keys
+    }
+}
+
+impl Index<usize> for Corpus {
+    type Output = [String];
+
+    fn index(&self, word_length: usize) -> &Self::Output {
+        &self.words[&word_length]
+    }
+}
+
+impl IndexMut<usize> for Corpus {
+    fn index_mut(&mut self, word_length: usize) -> &mut Self::Output {
+        self.words.get_mut(&word_length).unwrap()
+    }
+}
+
+impl AddAssign<String> for Corpus {
+    /// Adds a new word to the corpus in the appropriate slot.
+    fn add_assign(&mut self, word: String) {
+        let word_vec = self.words.entry(word.len()).or_insert_with(|| Vec::new());
+        word_vec.push(word);
+    }
+}

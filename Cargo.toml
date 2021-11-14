@@ -1,8 +1,6 @@
 [workspace]
 
 members = [
-    "dictionary_merger",
-    "calc_one_letter_different_words",
     "graph",
-    "word_chain_calculator"
+    "pre_calc"
 ]

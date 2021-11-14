@@ -37,14 +37,14 @@ impl Graph {
     /// Reads in the specified difference file (e.g. "one_letter_different_05.txt")
     /// and returns a graph with all its vertices correctly linked and its
     /// components calculated.
-    pub fn load_from_difference_file<P: AsRef<Path>>(filename: P) -> io::Result<Self> {
+    pub fn load_from_adjacency_file<P: AsRef<Path>>(filename: P) -> io::Result<Self> {
         let f = File::open(filename)?;
         let rdr = BufReader::new(f);
         let lines = rdr.lines().collect::<io::Result<Vec<String>>>()?;
 
         // Each line consists of 2 or more words.
-        // The first word is the 'anchor', and the remaining words are the 'reachable words':
-        // the anchor can be transformed into each of the reachable words by changing
+        // The first word is the 'anchor', and the remaining words are the 'adjacency list':
+        // the anchor can be transformed into each of the adjacencies by changing
         // one letter in the anchor, thus each line represents a 1-step transformation.
         //
         // We can use this to build a graph and then calculate its components. A component
@@ -77,6 +77,7 @@ impl Graph {
         }
 
         graph.calculate_components();
+
         Ok(graph)
     }
 

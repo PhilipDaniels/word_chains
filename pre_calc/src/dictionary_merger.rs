@@ -1,18 +1,15 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, path::Path};
 use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 
-const DICT_IN_DIR: &str = "./../dictionaries";
-const DICT_OUT_DIR: &str = "./../dictionaries_out";
-const CORPUS_FILE: &str = "./../dictionaries_out/corpus.txt";
-
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
-/// then creates a single merged dictionary called "corpus.txt" in the current folder.
-fn main() {
+/// then creates a single merged dictionary called "corpus.txt" in the output folder.
+pub(crate) fn merge_dictionaries(dictionary_dir: &Path, corpus_file: &Path) {
     let mut words = HashSet::new();
-    let paths = fs::read_dir(DICT_IN_DIR).expect("Could not locate dictionaries folder");
+    let paths = fs::read_dir(dictionary_dir).expect("Could not read entries in dictionaries folder");
 
+    println!("Merging dictionary files from {:?} to {:?}", dictionary_dir, corpus_file);
     for path in paths {
         let path = path.unwrap().path();
         println!("Reading words from {:?}", path);
@@ -39,9 +36,7 @@ fn main() {
         );
     }
 
-    println!("Total word count = {}", words.len());
-
-    write_corpus_file(words);
+    write_corpus_file(words, corpus_file);
 }
 
 fn clean_word(w: String) -> Option<String> {
@@ -57,16 +52,17 @@ fn clean_word(w: String) -> Option<String> {
     }
 }
 
-fn write_corpus_file(words: HashSet<String>) {
-    fs::create_dir_all(DICT_OUT_DIR).unwrap();
-    let out_file = fs::File::create(CORPUS_FILE).expect("Can create corpus.txt");
+fn write_corpus_file(words: HashSet<String>, corpus_file: &Path) {
+    let parent = corpus_file.parent().unwrap();
+    fs::create_dir_all(parent).unwrap();
+    let out_file = fs::File::create(corpus_file).expect("Unable to create corpus_file");
     let mut writer = io::BufWriter::new(out_file);
     let mut words: Vec<_> = words.into_iter().collect();
     words.sort_unstable();
-    for w in words {
+    for w in &words {
         writeln!(writer, "{}", w).unwrap();
     }
 
-    println!("Wrote corpus.txt");
+    println!("Finished, wrote {} words to {:?}", words.len(), corpus_file);
 }
 

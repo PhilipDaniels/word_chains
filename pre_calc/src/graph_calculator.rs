@@ -1,32 +1,44 @@
 use graph::{calculate_graph_stats, Graph, WordLengthStatistics};
 use rayon::prelude::*;
 use std::io::Write;
+use std::path::Path;
 use std::{fs, io, ops::RangeInclusive};
 
-fn main() {
+use crate::CommandLineOptions;
+
+pub(crate) fn calculate_initial_graphs(options: &CommandLineOptions) {
     // Loading the graphs and calculating components is reasonably fast,
     // there is no reason not to do it for all of them. But it's handy to be
     // able to specify one, for debugging purposes.
-    let word_lengths = match std::env::args().nth(1) {
-        Some(s) => {
-            let n = s.parse::<usize>().unwrap();
-            RangeInclusive::new(n, n)
-        }
-        None => RangeInclusive::new(1, 30),
-    };
+    // let word_lengths = match std::env::args().nth(1) {
+    //     Some(s) => {
+    //         let n = s.parse::<usize>().unwrap();
+    //         RangeInclusive::new(n, n)
+    //     }
+    //     None => RangeInclusive::new(1, 30),
+    // };
+
+    let word_lengths = RangeInclusive::new(1, 30);
 
     let (mut graphs, stats): (Vec<_>, Vec<_>) = word_lengths
         .into_par_iter()
         .filter_map(|word_length| {
-            let filename = format!(
-                "../dictionaries_out/one_letter_different_{:02}.txt",
-                word_length
-            );
+            let filename = options.all_adjacency_file(word_length);
 
-            Graph::load_from_difference_file(&filename)
+            Graph::load_from_adjacency_file(&filename)
                 .map(|graph| {
+                    println!(
+                        "Loaded graph for word length of {} from {:?}",
+                        word_length, filename
+                    );
+
                     let stats = calculate_graph_stats(&graph);
-                    println!("Loaded graph for word length of {}", stats.word_length);
+
+                    println!(
+                        "Calculated stats for graph of word length of {}",
+                        word_length
+                    );
+
                     (graph, stats)
                 })
                 .ok()
@@ -34,12 +46,12 @@ fn main() {
         .unzip();
 
     graphs.sort_unstable_by(|a, b| a.word_length().cmp(&b.word_length()));
-    write_graph_stats(&stats);
-    write_largest_components_to_file(&graphs);
+    write_word_stats(&options.word_stats_file(), &stats);
+    write_largest_components_to_file(options, &graphs);
 }
 
-fn write_graph_stats(stats: &[WordLengthStatistics]) {
-    let mut writer = csv::Writer::from_path("./../dictionaries_out/word_graph_stats.csv").unwrap();
+fn write_word_stats(stats_file: &Path, stats: &[WordLengthStatistics]) {
+    let mut writer = csv::Writer::from_path(stats_file).unwrap();
 
     writer
         .write_record(&[
@@ -95,18 +107,15 @@ fn write_graph_stats(stats: &[WordLengthStatistics]) {
 
 /// Extract the largest component from each graph and write it as its
 /// own adjacency list file, to speed up and simplify for further processing.
-fn write_largest_components_to_file(graphs: &[Graph]) {
+fn write_largest_components_to_file(options: &CommandLineOptions, graphs: &[Graph]) {
     for graph in graphs {
         let components = graph.components();
         let comp = components
             .get(0)
             .expect("At least one component should exist");
 
-        let filename = format!(
-            "./../dictionaries_out/largest_adjacency_list_{:02}.txt",
-            graph.word_length()
-        );
-        println!("Writing {}", filename);
+        let filename = options.largest_component_adjacency_file(graph.word_length());
+        println!("Writing {:?}", filename);
         let rw_file = fs::File::create(filename).unwrap();
         let mut writer = io::BufWriter::new(rw_file);
 
