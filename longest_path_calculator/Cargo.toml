@@ -1,5 +1,5 @@
 [package]
-name = "pre_calc"
+name = "longest_path_calculator"
 version = "0.1.0"
 edition = "2018"
 
@@ -8,6 +8,5 @@ edition = "2018"
 [dependencies]
 graph = { path = "../graph" }
 rayon = "1.5"
-csv = "1.1"
 structopt = "0.3"
 logging_timer = "1"

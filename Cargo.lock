@@ -214,6 +214,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "longest_path_calculator"
+version = "0.1.0"
+dependencies = [
+ "graph",
+ "logging_timer",
+ "rayon",
+ "structopt",
+]
+
+[[package]]
 name = "memchr"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

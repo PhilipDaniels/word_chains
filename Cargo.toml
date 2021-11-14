@@ -2,5 +2,6 @@
 
 members = [
     "graph",
-    "pre_calc"
+    "pre_calc",
+    "longest_path_calculator"
 ]

@@ -21,3 +21,6 @@ graphs (the longest word chain is always in the largest component,
 because the largest component is always much, much larger than the
 second largest component, so we can simplify debugging by just
 focusing on the largest component).
+
+## Longest Path Calculator
+
