@@ -109,9 +109,10 @@ fn write_difference_file(anchored_words: &[AnchoredWords]) {
 
     for v in anchored_words {
         // Words which have no other reachable words are not interesting.
-        if v.reachable_words.is_empty() {
-            continue;
-        };
+        // ...except for generating stats later on.
+        //if v.reachable_words.is_empty() {
+        //    continue;
+        //};
 
         write!(writer, "{} ", v.anchor).unwrap();
         let words = v.reachable_words.join(" ");
