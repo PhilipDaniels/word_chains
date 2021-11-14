@@ -68,7 +68,7 @@ impl Graph {
         }
 
         for line in lines {
-            let mut words_in_line = line.split(' ');
+            let mut words_in_line = line.split(' ').filter(|w| !w.is_empty());
             let anchor_word = words_in_line.next().unwrap();
             let anchor_word_index = graph.get_index_for_word(anchor_word);
 
@@ -143,7 +143,7 @@ pub struct WordLengthStatistics {
     pub num_two_components: usize,
     pub num_three_components: usize,
     pub largest_five_component_counts: Vec<usize>,
-    pub lc_leaf_count: usize,
+    pub largest_component_leaf_count: usize,
 }
 
 impl WordLengthStatistics {
@@ -156,7 +156,7 @@ impl WordLengthStatistics {
     }
 
     pub fn largest_component_upper_bound(&self) -> usize {
-        self.largest_component_word_count() - self.lc_leaf_count + 2
+        self.largest_component_word_count() - self.largest_component_leaf_count + 2
     }
 }
 
@@ -167,31 +167,19 @@ pub fn get_graph_stats(graph: &Graph) -> WordLengthStatistics {
         total_word_count: graph.vertices.len(),
         ..Default::default()
     };
-    
+
     let components = components(graph);
-   
+
     stats.num_components = components.len();
 
-    stats.num_one_components = components
-        .iter()
-        .filter(|c| c.num_vertices == 1)
-        .count();
-    
-    stats.num_two_components = components
-        .iter()
-        .filter(|c| c.num_vertices == 2)
-        .count();
-    
-    stats.num_three_components = components
-        .iter()
-        .filter(|c| c.num_vertices == 3)
-        .count();
-    
-    stats.largest_five_component_counts = components
-        .iter()
-        .take(5)
-        .map(|c| c.num_vertices)
-        .collect();
+    stats.num_one_components = components.iter().filter(|c| c.num_vertices == 1).count();
+
+    stats.num_two_components = components.iter().filter(|c| c.num_vertices == 2).count();
+
+    stats.num_three_components = components.iter().filter(|c| c.num_vertices == 3).count();
+
+    stats.largest_five_component_counts =
+        components.iter().take(5).map(|c| c.num_vertices).collect();
 
     stats
 }
@@ -214,7 +202,10 @@ fn components(graph: &Graph) -> Vec<Component> {
 
     let mut v: Vec<_> = map
         .iter()
-        .map(|(&number, &num_vertices)| Component { number, num_vertices })
+        .map(|(&number, &num_vertices)| Component {
+            number,
+            num_vertices,
+        })
         .collect();
 
     v.sort_unstable_by(|a, b| b.num_vertices.cmp(&a.num_vertices));

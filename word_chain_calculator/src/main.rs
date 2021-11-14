@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 use rayon::prelude::*;
 
-use graph::{Graph, get_graph_stats};
+use graph::{Graph, WordLengthStatistics, get_graph_stats};
 
 fn main() {
     // Loading the graphs and calculating components is very fast, there
@@ -31,9 +31,11 @@ fn main() {
         .collect();
 
     graphs.sort_unstable_by(|a, b| a.0.word_length().cmp(&b.0.word_length()));
-    for gs in &graphs {
-        println!("{:?}", gs.1);
-    }
+    write_graph_stats(&graphs);
+}
+
+fn write_graph_stats(graphs: &[(Graph, WordLengthStatistics)]) {
+    
 }
 
 /*
