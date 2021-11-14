@@ -158,6 +158,12 @@ impl Graph {
     }
 }
 
+#[derive(Debug)]
+pub struct Component {
+    pub number: usize,
+    pub num_vertices: usize,
+}
+
 #[derive(Debug, Default)]
 pub struct WordLengthStatistics {
     pub word_length: usize,
@@ -230,10 +236,4 @@ pub fn calculate_graph_stats(graph: &Graph) -> WordLengthStatistics {
     }
 
     stats
-}
-
-#[derive(Debug)]
-pub struct Component {
-    pub number: usize,
-    pub num_vertices: usize,
 }
