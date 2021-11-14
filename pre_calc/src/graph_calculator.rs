@@ -33,12 +33,6 @@ pub(crate) fn calculate_initial_graphs(options: &CommandLineOptions) {
                     );
 
                     let stats = calculate_graph_stats(&graph);
-
-                    println!(
-                        "Calculated stats for graph of word length of {}",
-                        word_length
-                    );
-
                     (graph, stats)
                 })
                 .ok()
