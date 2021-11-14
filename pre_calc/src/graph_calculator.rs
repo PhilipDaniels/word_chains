@@ -114,11 +114,11 @@ fn write_largest_components_to_file(options: &CommandLineOptions, graphs: &[Grap
         let mut writer = io::BufWriter::new(rw_file);
 
         for v in graph.vertices.iter().filter(|v| v.component == comp.number) {
-            write!(writer, "{} ", v.word).unwrap();
+            write!(writer, "{}", v.word).unwrap();
 
             for word_index in &v.adjacency_list {
                 let v2 = &graph.vertices[*word_index];
-                write!(writer, "{} ", v2.word).unwrap();
+                write!(writer, " {}", v2.word).unwrap();
             }
 
             writeln!(writer).unwrap();
