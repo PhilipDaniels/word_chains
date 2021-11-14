@@ -4,9 +4,9 @@ use std::{collections::HashMap, fs::File, path::Path};
 
 #[derive(Debug)]
 pub struct Vertex {
-    word: String,
-    adjacency_list: Vec<usize>,
-    component: usize,
+    pub word: String,
+    pub adjacency_list: Vec<usize>,
+    pub component: usize,
 }
 
 impl From<String> for Vertex {
@@ -23,7 +23,7 @@ impl From<String> for Vertex {
 /// there may be (in fact, probably are) multiple components within the graph.
 #[derive(Debug)]
 pub struct Graph {
-    vertices: Vec<Vertex>,
+    pub vertices: Vec<Vertex>,
     // Provide a fast way of looking up the index of a word.
     word_to_index: HashMap<String, usize>,
 }
@@ -79,6 +79,29 @@ impl Graph {
         graph.calculate_components();
         Ok(graph)
     }
+
+    /// Analyze the components in the graph, returning a map of component -> num vertices
+    /// sorted by number of vertices in the components, descending.
+    pub fn components(&self) -> Vec<Component> {
+        let mut map = HashMap::<usize, usize>::new();
+
+        for v in &self.vertices {
+            let entry = map.entry(v.component).or_insert(0);
+            *entry += 1;
+        }
+
+        let mut v: Vec<_> = map
+            .iter()
+            .map(|(&number, &num_vertices)| Component {
+                number,
+                num_vertices,
+            })
+            .collect();
+
+        v.sort_unstable_by(|a, b| b.num_vertices.cmp(&a.num_vertices));
+        v
+    }
+
 
     fn add_vertex<S: Into<String>>(&mut self, word: S) {
         let word = word.into();
@@ -175,7 +198,7 @@ pub fn calculate_graph_stats(graph: &Graph) -> WordLengthStatistics {
         ..Default::default()
     };
 
-    let components = components(graph);
+    let components = graph.components();
 
     stats.num_components = components.len();
 
@@ -212,26 +235,4 @@ pub fn calculate_graph_stats(graph: &Graph) -> WordLengthStatistics {
 pub struct Component {
     pub number: usize,
     pub num_vertices: usize,
-}
-
-/// Analyze the components in the graph, returning a map of component -> num vertices
-/// sorted by number of vertices in the components, descending.
-fn components(graph: &Graph) -> Vec<Component> {
-    let mut map = HashMap::<usize, usize>::new();
-
-    for v in &graph.vertices {
-        let entry = map.entry(v.component).or_insert(0);
-        *entry += 1;
-    }
-
-    let mut v: Vec<_> = map
-        .iter()
-        .map(|(&number, &num_vertices)| Component {
-            number,
-            num_vertices,
-        })
-        .collect();
-
-    v.sort_unstable_by(|a, b| b.num_vertices.cmp(&a.num_vertices));
-    v
 }
