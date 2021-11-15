@@ -7,11 +7,21 @@ pub struct CompletedWords {
     completed: HashMap<usize, Vec<String>>,
 }
 
+/// Create chain directories if they don't exist so as to avoid race conditions
+/// when writing the chain files.
+pub fn create_chain_directories(dirs: &RelativeDirectories, word_lengths: &[usize]) {
+    for word_length in word_lengths {
+        let dir = dirs.chains_directory(*word_length);
+        std::fs::create_dir_all(&dir).unwrap();
+    }
+}
+
 pub fn get_completed_words(dirs: &RelativeDirectories, word_lengths: &[usize]) -> CompletedWords {
     let mut completed_words = CompletedWords::default();
 
     for word_length in word_lengths {
         let dir = dirs.chains_directory(*word_length);
+
         if let Ok(dir) = dir.read_dir() {
             for dir_entry in dir {
                 if let Ok(file) = dir_entry {

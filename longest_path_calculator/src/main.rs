@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, fs::File, hash::Hash, io, num, path::PathBuf};
 use std::io::Write;
 
-use completed_words::{get_completed_words, CompletedWords};
+use completed_words::{CompletedWords, create_chain_directories, get_completed_words};
 use graph::{Graph, RelativeDirectories};
 use rayon::{
     iter::{IntoParallelIterator, ParallelIterator},
@@ -32,7 +32,8 @@ fn main() {
     let mut graphs = load_graphs(&dirs);
 
     // Determine completed words by scanning output\chainsNN files.
-    let word_lengths: Vec<_> = graphs.iter().map(|g| g.size()).collect();
+    let word_lengths: Vec<_> = graphs.iter().map(|g| g.word_length()).collect();
+    create_chain_directories(&dirs, &word_lengths);
     let completed_words = get_completed_words(&dirs, &word_lengths);
     print_completion_status(&graphs, &completed_words);
 
@@ -88,7 +89,7 @@ fn calculate_longest_path(dirs: &RelativeDirectories, graph: &Graph, completed_a
     }
 
     println!(
-        "There are {} words still to compute for the graph of size {}",
+        "There are {} words still to compute for the graph of word length {}",
         words_still_to_do.len(),
         graph.word_length()
     );

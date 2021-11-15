@@ -304,7 +304,7 @@ impl RelativeDirectories {
     /// Returns the name of the 'chains' directory for a specified word length.
     pub fn chains_directory(&self, word_length: usize) -> PathBuf {
         let mut pb = self.output_directory();
-        pb.push(format!("chain{:02}", word_length));
+        pb.push(format!("chains_{:02}", word_length));
         pb
     }
 }
