@@ -1,15 +1,19 @@
-use std::{collections::HashSet, path::Path};
 use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
+use std::{collections::HashSet, path::Path};
 
 /// Reads all the available input dictionaries, filters the words for basic acceptability, and
 /// then creates a single merged dictionary called "corpus.txt" in the output folder.
 pub(crate) fn merge_dictionaries(dictionary_dir: &Path, corpus_file: &Path) {
     let mut words = HashSet::new();
-    let paths = fs::read_dir(dictionary_dir).expect("Could not read entries in dictionaries folder");
+    let paths =
+        fs::read_dir(dictionary_dir).expect("Could not read entries in dictionaries folder");
 
-    println!("Merging dictionary files from {:?} to {:?}", dictionary_dir, corpus_file);
+    println!(
+        "Merging dictionary files from {:?} to {:?}",
+        dictionary_dir, corpus_file
+    );
     for path in paths {
         let path = path.unwrap().path();
         println!("Reading words from {:?}", path);
@@ -65,4 +69,3 @@ fn write_corpus_file(words: HashSet<String>, corpus_file: &Path) {
 
     println!("Finished, wrote {} words to {:?}", words.len(), corpus_file);
 }
-

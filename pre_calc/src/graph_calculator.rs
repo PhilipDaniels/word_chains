@@ -1,12 +1,10 @@
-use graph::{calculate_graph_stats, Graph, WordLengthStatistics};
+use graph::{calculate_graph_stats, Graph, RelativeDirectories, WordLengthStatistics};
 use rayon::prelude::*;
 use std::io::Write;
 use std::path::Path;
 use std::{fs, io, ops::RangeInclusive};
 
-use crate::CommandLineOptions;
-
-pub(crate) fn calculate_initial_graphs(options: &CommandLineOptions) {
+pub(crate) fn calculate_initial_graphs(dirs: &RelativeDirectories) {
     // Loading the graphs and calculating components is reasonably fast,
     // there is no reason not to do it for all of them. But it's handy to be
     // able to specify one, for debugging purposes.
@@ -23,7 +21,7 @@ pub(crate) fn calculate_initial_graphs(options: &CommandLineOptions) {
     let (mut graphs, stats): (Vec<_>, Vec<_>) = word_lengths
         .into_par_iter()
         .filter_map(|word_length| {
-            let filename = options.all_adjacency_file(word_length);
+            let filename = dirs.all_adjacency_file(word_length);
 
             Graph::load_from_adjacency_file(&filename)
                 .map(|graph| {
@@ -40,8 +38,8 @@ pub(crate) fn calculate_initial_graphs(options: &CommandLineOptions) {
         .unzip();
 
     graphs.sort_unstable_by(|a, b| a.word_length().cmp(&b.word_length()));
-    write_word_stats(&options.word_stats_file(), &stats);
-    write_largest_components_to_file(options, &graphs);
+    write_word_stats(&dirs.word_stats_file(), &stats);
+    write_largest_components_to_file(dirs, &graphs);
 }
 
 fn write_word_stats(stats_file: &Path, stats: &[WordLengthStatistics]) {
@@ -101,14 +99,14 @@ fn write_word_stats(stats_file: &Path, stats: &[WordLengthStatistics]) {
 
 /// Extract the largest component from each graph and write it as its
 /// own adjacency list file, to speed up and simplify for further processing.
-fn write_largest_components_to_file(options: &CommandLineOptions, graphs: &[Graph]) {
+fn write_largest_components_to_file(dirs: &RelativeDirectories, graphs: &[Graph]) {
     for graph in graphs {
         let components = graph.components();
         let comp = components
             .get(0)
             .expect("At least one component should exist");
 
-        let filename = options.largest_component_adjacency_file(graph.word_length());
+        let filename = dirs.largest_component_adjacency_file(graph.word_length());
         println!("Writing {:?}", filename);
         let rw_file = fs::File::create(filename).unwrap();
         let mut writer = io::BufWriter::new(rw_file);

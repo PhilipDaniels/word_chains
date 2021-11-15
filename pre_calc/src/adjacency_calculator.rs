@@ -1,3 +1,4 @@
+use graph::RelativeDirectories;
 use rayon::prelude::*;
 use std::io::Write;
 use std::{
@@ -8,19 +9,17 @@ use std::{
     path::Path,
 };
 
-use crate::CommandLineOptions;
-
 /// Reads in the entire word corpus and for each word, calculates its adjacency list,
 /// that is, all the words that can be formed by changing just a single character
 /// in the original word.
-pub(crate) fn calculate_corpus_adjacency_lists(options: &CommandLineOptions) {
+pub(crate) fn calculate_corpus_adjacency_lists(dirs: &RelativeDirectories) {
     println!(
         "Calculating word adjacency lists based on {:?}",
-        options.corpus_file()
+        dirs.corpus_file()
     );
-    let corpus = read_corpus_file(&options.corpus_file());
+    let corpus = read_corpus_file(&dirs.corpus_file());
 
-    println!("Finished reading {:?}", &options.corpus_file());
+    println!("Finished reading {:?}", &dirs.corpus_file());
     let keys = corpus.sorted_keys();
     for key in &keys {
         println!(
@@ -37,7 +36,7 @@ pub(crate) fn calculate_corpus_adjacency_lists(options: &CommandLineOptions) {
         };
 
         let adjacency_lists = calc_adjacency_lists(words);
-        write_adjacency_list_file(options, &adjacency_lists);
+        write_adjacency_list_file(dirs, &adjacency_lists);
     });
 }
 
@@ -90,7 +89,7 @@ fn one_letter_different(w1: &str, w2: &str) -> bool {
 }
 
 /// Writes one adjacency list file for a particular word length.
-fn write_adjacency_list_file(options: &CommandLineOptions, adjacency_lists: &[WordAdjacencyList]) {
+fn write_adjacency_list_file(dirs: &RelativeDirectories, adjacency_lists: &[WordAdjacencyList]) {
     if adjacency_lists.is_empty()
         || adjacency_lists
             .iter()
@@ -100,7 +99,7 @@ fn write_adjacency_list_file(options: &CommandLineOptions, adjacency_lists: &[Wo
     }
 
     let word_length = adjacency_lists[0].anchor.len();
-    let filename = options.all_adjacency_file(word_length);
+    let filename = dirs.all_adjacency_file(word_length);
     println!("Writing {:?}", filename);
     let rw_file = fs::File::create(filename).unwrap();
     let mut writer = io::BufWriter::new(rw_file);

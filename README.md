@@ -24,3 +24,7 @@ focusing on the largest component).
 
 ## Longest Path Calculator
 
+
+# TODO
+
+Better dictionaries (of size 10k, 20k, 30k etc.)
