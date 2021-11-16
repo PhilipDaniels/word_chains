@@ -135,7 +135,7 @@ impl Graph {
     }
 
     // TODO: Implement Index<str>.
-    fn get_index_for_word(&self, word: &str) -> usize {
+    pub fn get_index_for_word(&self, word: &str) -> usize {
         self.word_to_index[word]
     }
 
@@ -209,11 +209,14 @@ impl WordLengthStatistics {
         100.0 * self.largest_component_word_count() as f64 / self.total_word_count as f64
     }
 
+    /// Returns the upper bound on the length of the longest path.
     pub fn largest_component_upper_bound(&self) -> usize {
-        if self.largest_component_leaf_count == 0 {
-            self.largest_component_word_count()
-        } else {
+        // The longest path can include at most 2 leaves.
+        // If there is only 1 leaf, it can be in the longest path.
+        if self.largest_component_leaf_count > 2 {
             self.largest_component_word_count() - self.largest_component_leaf_count + 2    
+        } else {
+            self.largest_component_word_count()
         }
     }
 }

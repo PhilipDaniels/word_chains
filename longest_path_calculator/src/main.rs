@@ -96,22 +96,44 @@ fn calculate_longest_path(dirs: &RelativeDirectories, graph: &Graph, completed_a
 
     words_still_to_do.into_par_iter().for_each(|word| {
         let path = calculate_longest_path_for_word(dirs, graph, word);
-        write_path_output_file(dirs, &path);
+        let path_in_words = path.iter().map(|idx| graph.vertices[*idx].word.clone()).collect();
+        write_path_output_file(dirs, &path_in_words);
     });
 
     // ALL DONE BY HERE!
     // scan files in directory chainsNN
     // find the file with the longest number of words (split by space)
     // write file chainsNN\00_longest_path.txt
-
 }
 
 fn calculate_longest_path_for_word(
     dirs: &RelativeDirectories,
     graph: &Graph,
     word: &String,
-) -> Vec<String> {
-    vec![]
+) -> Vec<usize> {
+    // Initialise tracking structures. They are based on vertex indices.
+    // This capacity is the longest possible path, so we will never need
+    // to grow this vector.
+    let mut longest_path = Vec::with_capacity(graph.size());
+    let mut visited_vertices = vec![false; graph.size()];
+
+    let start_idx = graph.get_index_for_word(word);
+    calc_lp(graph, start_idx, &mut longest_path, &mut visited_vertices);
+
+    longest_path
+}
+
+fn calc_lp(graph: &Graph, vertex_index: usize, longest_path: &mut Vec<usize>, visited_vertices: &mut Vec<bool>) {
+    longest_path.push(vertex_index);
+    visited_vertices[vertex_index] = true;
+
+    // Now search down.
+    let vertex = &graph.vertices[vertex_index];
+    for adjacency_index in &vertex.adjacency_list {
+        if !visited_vertices[*adjacency_index] {
+            calc_lp(graph, *adjacency_index, longest_path, visited_vertices);
+        }
+    }
 }
 
 /// Writes the output file 'output\chainsNN\{word}.txt'.
