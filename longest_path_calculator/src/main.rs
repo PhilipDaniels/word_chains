@@ -15,6 +15,8 @@ mod completed_words;
 struct CommandLineOptions {
     #[structopt(name = "DICTIONARY_DIR", parse(from_os_str))]
     dictionary_directory: PathBuf,
+    #[structopt(short = "n", long, help = "Comma-separated list of word length to calculate for")]
+    word_lengths: Option<String>,
 }
 
 fn main() {
@@ -29,11 +31,24 @@ fn main() {
         std::process::exit(1);
     }
 
-    let mut graphs = load_graphs(&dirs);
+    let mut word_lengths: Vec<usize> = match options.word_lengths {
+        Some(lengths) => lengths.split(',').map(|w| w.parse().unwrap()).collect(),
+        None => (1..30).collect()
+    };
+    
+    word_lengths.sort_unstable();
+    
+    let mut graphs = load_graphs(&dirs, &word_lengths);
+    if graphs.is_empty() {
+        eprintln!("No files found in output directory {:?}, run pre-calc first", dirs.output_directory());
+        std::process::exit(1);
+    }
 
-    // Determine completed words by scanning output\chainsNN files.
+    // Create a set of output directories based on what graphs we actually loaded.
     let word_lengths: Vec<_> = graphs.iter().map(|g| g.word_length()).collect();
     create_chain_directories(&dirs, &word_lengths);
+
+    // Determine completed words by scanning output\chainsNN files.
     let completed_words = get_completed_words(&dirs, &word_lengths);
     print_completion_status(&graphs, &completed_words);
 
@@ -48,11 +63,11 @@ fn main() {
     }
 }
 
-fn load_graphs(dirs: &RelativeDirectories) -> Vec<Graph> {
-    (1..30)
+fn load_graphs(dirs: &RelativeDirectories, word_lengths: &[usize]) -> Vec<Graph> {
+    word_lengths
         .into_par_iter()
         .filter_map(|word_length| {
-            let filename = dirs.largest_component_adjacency_file(word_length);
+            let filename = dirs.largest_component_adjacency_file(*word_length);
             let g_result = Graph::load_from_adjacency_file(&filename);
             if g_result.is_ok() {
                 println!(
